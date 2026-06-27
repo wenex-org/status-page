@@ -114,6 +114,16 @@ createApp({
       }[level];
     }
 
+    // Human-friendly monitoring cadence, shown in place of the internal endpoint.
+    function checkCadence(r) {
+      const m = r.intervalMinutes;
+      if (!m || m <= 0) return 'Monitored continuously';
+      if (m < 60) return `Checked every ${m} min`;
+      const h = m / 60;
+      if (Number.isInteger(h)) return `Checked every ${h} ${h === 1 ? 'hour' : 'hours'}`;
+      return `Checked every ${m} min`;
+    }
+
     function formatDate(iso) {
       const d = new Date(iso.includes('Z') || iso.includes('T') ? iso : iso + 'Z');
       return d.toLocaleString(undefined, {
@@ -170,6 +180,7 @@ createApp({
       aggText,
       newsClasses,
       newsBadge,
+      checkCadence,
       formatDate,
       relativeTime,
       toggleTheme,
