@@ -1,9 +1,9 @@
-import { config } from './config.js';
-import { getDb, closeDb } from './db/index.js';
+import { startScheduler, stopScheduler } from './services/scheduler.service.js';
 import { CredentialsModel } from './models/credentials.model.js';
 import { GroupModel } from './models/group.model.js';
+import { getDb, closeDb } from './db/index.js';
 import { createApp } from './app.js';
-import { startScheduler, stopScheduler } from './services/scheduler.service.js';
+import { config } from './config.js';
 
 /** Application entry point: init DB, seed admin, start scheduler + HTTP server. */
 function main(): void {

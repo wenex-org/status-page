@@ -1,11 +1,12 @@
 import type { Request, Response } from 'express';
+
 import { config } from '../config.js';
-import { ResourceModel } from '../models/resource.model.js';
-import { GroupModel } from '../models/group.model.js';
-import { NewsModel } from '../models/news.model.js';
-import { CredentialsModel } from '../models/credentials.model.js';
-import { checkNow } from '../services/scheduler.service.js';
 import type { News } from '../models/types.js';
+import { NewsModel } from '../models/news.model.js';
+import { GroupModel } from '../models/group.model.js';
+import { checkNow } from '../services/scheduler.service.js';
+import { ResourceModel } from '../models/resource.model.js';
+import { CredentialsModel } from '../models/credentials.model.js';
 
 const NEWS_LEVELS: News['level'][] = ['info', 'warning', 'critical'];
 

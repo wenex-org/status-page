@@ -1,5 +1,5 @@
-import { getDb } from '../db/index.js';
 import type { Group } from './types.js';
+import { getDb } from '../db/index.js';
 
 /** Turn a display name into a URL-safe, stable slug. */
 function slugify(name: string): string {

@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+
 import { GroupModel } from '../models/group.model.js';
 
 function str(value: unknown): string {

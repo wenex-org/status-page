@@ -1,6 +1,6 @@
 import { config } from '../config.js';
 import type { Resource } from '../models/types.js';
-import { StatusHistoryModel, type CheckResult } from '../models/statusHistory.model.js';
+import { StatusHistoryModel, type CheckResult } from '../models/status-history.model.js';
 
 /**
  * Performs a single health check against a resource's endpoint.

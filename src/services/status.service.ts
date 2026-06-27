@@ -1,6 +1,6 @@
 import { ResourceModel } from '../models/resource.model.js';
 import { GroupModel } from '../models/group.model.js';
-import { StatusHistoryModel } from '../models/statusHistory.model.js';
+import { StatusHistoryModel } from '../models/status-history.model.js';
 import type {
   AggregateStatus,
   GroupStatusView,

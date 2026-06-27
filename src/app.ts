@@ -1,5 +1,6 @@
-import path from 'node:path';
 import express, { type NextFunction, type Request, type Response } from 'express';
+import path from 'node:path';
+
 import { config } from './config.js';
 import { apiRouter } from './routes/api.routes.js';
 import { adminRouter } from './routes/admin.routes.js';

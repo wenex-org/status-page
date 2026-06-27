@@ -1,5 +1,5 @@
-import { getDb } from '../db/index.js';
 import type { Resource } from './types.js';
+import { getDb } from '../db/index.js';
 
 /** Data access for tracked resources. */
 export const ResourceModel = {

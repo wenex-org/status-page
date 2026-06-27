@@ -1,7 +1,8 @@
-import path from 'node:path';
 import { Router } from 'express';
+import path from 'node:path';
+
 import { config } from '../config.js';
-import { basicAuth } from '../middleware/basicAuth.js';
+import { basicAuth } from '../middleware/basic-auth.js';
 import { AdminController } from '../controllers/admin.controller.js';
 import { GroupController } from '../controllers/group.controller.js';
 

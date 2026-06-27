@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+
 import { NewsModel } from '../models/news.model.js';
 import { buildGroupedStatus } from '../services/status.service.js';
 

@@ -1,4 +1,5 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+
 import { getDb } from '../db/index.js';
 import type { Credentials } from './types.js';
 

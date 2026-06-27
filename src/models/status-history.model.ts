@@ -1,5 +1,5 @@
-import { getDb } from '../db/index.js';
 import type { StatusCheck } from './types.js';
+import { getDb } from '../db/index.js';
 
 export interface CheckResult {
   resourceId: number;

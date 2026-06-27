@@ -1,9 +1,10 @@
 import cron, { type ScheduledTask } from 'node-cron';
+
 import { config } from '../config.js';
-import { ResourceModel } from '../models/resource.model.js';
-import { StatusHistoryModel } from '../models/statusHistory.model.js';
 import type { Resource } from '../models/types.js';
 import { checkAndRecord } from './checker.service.js';
+import { ResourceModel } from '../models/resource.model.js';
+import { StatusHistoryModel } from '../models/status-history.model.js';
 
 /**
  * Monitoring scheduler.
