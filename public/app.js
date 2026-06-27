@@ -8,6 +8,14 @@ createApp({
     const isDark = ref(document.documentElement.classList.contains('dark'));
     let timer = null;
 
+    // Header link target: a `?back=<uri>` query param if present (and a safe
+    // http(s) URL), otherwise the default Wenex site.
+    const backUrl = computed(() => {
+      const raw = new URLSearchParams(location.search).get('back');
+      if (raw && /^https?:\/\//i.test(raw)) return raw;
+      return 'https://wenex.org';
+    });
+
     const overall = computed(() => (data.value ? data.value.overall : 'unknown'));
 
     // Ungrouped resources (group id === null) are shown first, header-less.
@@ -180,6 +188,7 @@ createApp({
       data,
       loading,
       isDark,
+      backUrl,
       ungrouped,
       ungroupedItem,
       namedGroups,
