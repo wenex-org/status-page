@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 
 /**
@@ -13,8 +14,21 @@ function envInt(name: string, fallback: number): number {
 
 const projectRoot = path.resolve(__dirname, '..');
 
+/** Project version: the APP_VERSION env var if set, else package.json's version. */
+function resolveVersion(): string {
+  if (process.env.APP_VERSION) return process.env.APP_VERSION;
+  try {
+    const pkgPath = path.resolve(projectRoot, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as { version?: string };
+    return pkg.version ?? 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 export const config = {
   projectRoot,
+  version: resolveVersion(),
   port: envInt('PORT', 1045),
   host: process.env.HOST ?? '0.0.0.0',
   dbPath: path.resolve('data/status.db'),

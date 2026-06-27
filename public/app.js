@@ -17,6 +17,7 @@ createApp({
     });
 
     const overall = computed(() => (data.value ? data.value.overall : 'unknown'));
+    const version = computed(() => data.value?.version ?? '');
 
     // Ungrouped resources (group id === null) are shown first, header-less.
     const ungrouped = computed(() =>
@@ -193,6 +194,7 @@ createApp({
       ungroupedItem,
       namedGroups,
       overall,
+      version,
       overallLabel,
       overallClasses,
       dotClass,

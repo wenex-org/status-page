@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 
+import { config } from '../config.js';
 import { NewsModel } from '../models/news.model.js';
 import { buildGroupedStatus } from '../services/status.service.js';
 
@@ -10,6 +11,7 @@ export const StatusController = {
     const { overall, groups } = buildGroupedStatus();
     res.json({
       overall,
+      version: config.version,
       updatedAt: new Date().toISOString(),
       groups,
       news: NewsModel.active(),
