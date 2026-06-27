@@ -15,7 +15,7 @@ const projectRoot = path.resolve(__dirname, '..');
 
 export const config = {
   projectRoot,
-  port: envInt('PORT', 3000),
+  port: envInt('PORT', 1045),
   host: process.env.HOST ?? '0.0.0.0',
   dbPath: path.resolve('data/status.db'),
   retentionDays: envInt('RETENTION_DAYS', 90),

@@ -66,7 +66,7 @@ The CDN-based browser frontend under `public/` is excluded from linting.
 
 | Variable           | Default   | Description                                 |
 | ------------------ | --------- | ------------------------------------------- |
-| `PORT`             | `3000`    | HTTP port                                   |
+| `PORT`             | `1045`    | HTTP port                                   |
 | `HOST`             | `0.0.0.0` | Bind address                                |
 | `ADMIN_USERNAME`   | `admin`   | Seed admin username (only when DB is empty) |
 | `ADMIN_PASSWORD`   | `admin`   | Seed admin password (only when DB is empty) |

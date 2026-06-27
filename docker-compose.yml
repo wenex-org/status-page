@@ -1,0 +1,15 @@
+# docker build -t wenex/status-page:latest .
+services:
+  status-page:
+    container_name: status-page
+    image: wenex/status-page:latest
+    ports:
+      - 1045:1045 # REST
+    env_file:
+      - .env
+    environment:
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin
+    volumes:
+      - ./data/:/app/data/
+    network_mode: host
