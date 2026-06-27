@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - show project version (APP_VERSION env, else package.json) in status page footer. @vhidvz
 
+### Changed
+
+- serve Vue and Tailwind from local /vendor assets instead of unpkg/tailwind CDNs. @vhidvz
+
 ## [1.0.0] - 2026-06-27
 
 ### Added
