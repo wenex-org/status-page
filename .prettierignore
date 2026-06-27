@@ -1,0 +1,8 @@
+dist/
+node_modules/
+data/
+.impeccable/
+pnpm-lock.yaml
+*.ico
+*.png
+*.svg

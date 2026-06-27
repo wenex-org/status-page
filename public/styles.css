@@ -1,0 +1,22 @@
+/* Small supplemental styles on top of Tailwind (CDN). */
+
+/* Hide content until Vue has compiled the template. */
+[v-cloak] {
+  display: none;
+}
+
+/* Smooth theme transitions for core surfaces. */
+html,
+body {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

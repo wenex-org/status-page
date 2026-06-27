@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wenex Status</title>
+    <meta name="description" content="Live status of Wenex services." />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#231b4f" />
+    <!-- Set theme before paint to avoid a flash of the wrong theme. -->
+    <script>
+      (function () {
+        var t = localStorage.getItem('theme');
+        if (
+          t === 'dark' ||
+          (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: 'class' };
+    </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body
+    class="h-full bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors"
+  >
+    <div id="app" v-cloak class="min-h-full">
+      <div class="mx-auto max-w-3xl px-4 py-10 sm:py-16">
+        <!-- Header -->
+        <header class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img src="/logo.svg" alt="Wenex" class="h-10 w-10" width="40" height="40" />
+            <h1 class="text-2xl font-semibold tracking-tight">Wenex Status</h1>
+          </div>
+          <button
+            @click="toggleTheme"
+            class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            :title="isDark ? 'Switch to light' : 'Switch to dark'"
+          >
+            <span v-if="isDark">☀️</span>
+            <span v-else>🌙</span>
+          </button>
+        </header>
+
+        <!-- Overall banner -->
+        <section class="mt-8">
+          <div
+            class="flex items-center gap-3 rounded-2xl border p-5"
+            :class="overallClasses.box"
+          >
+            <span class="relative flex h-3 w-3">
+              <span
+                v-if="overall === 'operational'"
+                class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+                :class="overallClasses.ping"
+              ></span>
+              <span
+                class="relative inline-flex h-3 w-3 rounded-full"
+                :class="overallClasses.dot"
+              ></span>
+            </span>
+            <div>
+              <p class="font-semibold leading-tight" :class="overallClasses.text">
+                {{ overallLabel }}
+              </p>
+              <p class="text-sm text-slate-500 dark:text-slate-400" v-if="data">
+                Updated {{ relativeTime(data.updatedAt) }}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- News / announcements -->
+        <section v-if="data && data.news.length" class="mt-6 space-y-3">
+          <article
+            v-for="n in data.news"
+            :key="n.id"
+            class="rounded-xl border p-4 shadow-sm"
+            :class="newsClasses(n.level)"
+          >
+            <div class="flex items-center gap-2">
+              <span
+                class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide"
+                :class="newsBadge(n.level)"
+                >{{ n.level }}</span
+              >
+              <span class="text-xs text-slate-400">{{ formatDate(n.created_at) }}</span>
+            </div>
+            <h3 class="mt-2 text-base font-semibold">{{ n.title }}</h3>
+            <p
+              v-if="n.body"
+              class="mt-1 text-sm text-slate-500 dark:text-slate-400 whitespace-pre-line"
+            >
+              {{ n.body }}
+            </p>
+          </article>
+        </section>
+
+        <!-- Resources, grouped by category -->
+        <section class="mt-8">
+          <div
+            v-if="loading && !data"
+            class="rounded-2xl border border-slate-200 p-8 text-center text-slate-400 dark:border-slate-800"
+          >
+            Loading…
+          </div>
+
+          <div
+            v-else-if="data && !data.groups.length"
+            class="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-400 dark:border-slate-700"
+          >
+            No services are being monitored yet.
+          </div>
+
+          <div v-else class="space-y-8">
+            <div v-for="g in data.groups" :key="g.slug">
+              <div class="mb-3 flex items-center justify-between px-1">
+                <h2
+                  class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+                >
+                  {{ g.name }}
+                </h2>
+                <span
+                  class="inline-flex items-center gap-1.5 text-xs font-medium"
+                  :class="aggText(g.status)"
+                >
+                  <span class="h-2 w-2 rounded-full" :class="aggDot(g.status)"></span>
+                  {{ aggLabel(g.status) }}
+                </span>
+              </div>
+
+              <ul class="space-y-3">
+                <li
+                  v-for="r in g.resources"
+                  :key="r.id"
+                  class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="flex min-w-0 items-center gap-3">
+                      <span
+                        class="h-2.5 w-2.5 shrink-0 rounded-full"
+                        :class="dotClass(r.current)"
+                      ></span>
+                      <div class="min-w-0">
+                        <p class="truncate font-medium">{{ r.name }}</p>
+                        <p class="truncate text-xs text-slate-400">{{ r.endpoint }}</p>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-sm font-semibold" :class="textClass(r.current)">
+                        {{ stateLabel(r.current) }}
+                      </p>
+                      <p class="text-xs text-slate-400" v-if="r.uptime24h !== null">
+                        {{ r.uptime24h }}% · 24h
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Uptime bar -->
+                  <div
+                    class="mt-4 flex h-7 items-end gap-[3px]"
+                    :title="'Most recent ' + r.history.length + ' checks'"
+                  >
+                    <template v-if="r.history.length">
+                      <span
+                        v-for="(h, i) in r.history"
+                        :key="i"
+                        class="h-full flex-1 rounded-sm"
+                        :class="h.isUp ? 'bg-emerald-400/80 dark:bg-emerald-500/70' : 'bg-rose-400/90 dark:bg-rose-500/80'"
+                        :title="(h.isUp ? 'Up' : 'Down') + ' · ' + formatDate(h.checkedAt)"
+                      ></span>
+                    </template>
+                    <template v-else>
+                      <span
+                        class="h-full flex-1 rounded-sm bg-slate-200 dark:bg-slate-800"
+                      ></span>
+                    </template>
+                  </div>
+
+                  <div
+                    class="mt-2 flex items-center justify-between text-xs text-slate-400"
+                  >
+                    <span v-if="r.lastCheckedAt"
+                      >Last checked {{ relativeTime(r.lastCheckedAt) }}</span
+                    >
+                    <span v-else>Awaiting first check</span>
+                    <span v-if="r.responseTimeMs !== null"
+                      >{{ r.responseTimeMs }} ms</span
+                    >
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <footer class="mt-12 text-center text-xs text-slate-400">
+          Auto-refreshes every 30s · Polling interval per service · 90-day history
+        </footer>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

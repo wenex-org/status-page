@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wenex Status · Admin</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#231b4f" />
+    <script>
+      (function () {
+        var t = localStorage.getItem('theme');
+        if (
+          t === 'dark' ||
+          (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        ) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: 'class' };
+    </script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body
+    class="h-full bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors"
+  >
+    <div id="app" v-cloak class="min-h-full">
+      <div class="mx-auto max-w-4xl px-4 py-10">
+        <!-- Header -->
+        <header class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img src="/logo.svg" alt="Wenex" class="h-10 w-10" width="40" height="40" />
+            <div>
+              <h1 class="text-2xl font-semibold tracking-tight">Wenex Status · Admin</h1>
+              <p class="text-sm text-slate-400">
+                Manage groups, services, announcements and credentials.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <a
+              href="/"
+              class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+              >View page</a
+            >
+            <button
+              @click="toggleTheme"
+              class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <span v-if="isDark">☀️</span><span v-else>🌙</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Toast -->
+        <div
+          v-if="toast"
+          class="mt-4 rounded-lg px-4 py-2 text-sm"
+          :class="toast.ok ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200'"
+        >
+          {{ toast.msg }}
+        </div>
+
+        <!-- Tabs -->
+        <nav class="mt-8 flex gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-900">
+          <button
+            v-for="t in tabs"
+            :key="t"
+            @click="tab = t"
+            class="flex-1 rounded-lg px-3 py-2 text-sm font-medium capitalize transition"
+            :class="tab === t ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'"
+          >
+            {{ t }}
+          </button>
+        </nav>
+
+        <!-- ===== Resources ===== -->
+        <section v-show="tab === 'resources'" class="mt-6 space-y-6">
+          <form
+            @submit.prevent="addResource"
+            class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+          >
+            <h2 class="text-base font-semibold">Add a service</h2>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <input
+                v-model="resForm.name"
+                placeholder="Name (e.g. API Gateway)"
+                required
+                :class="inputCls"
+              />
+              <input
+                v-model="resForm.endpoint"
+                placeholder="https://example.com/status"
+                required
+                :class="inputCls"
+              />
+            </div>
+            <div class="mt-3 flex flex-wrap items-center gap-3">
+              <select
+                v-model="resForm.groupId"
+                :class="inputCls + ' w-auto'"
+                title="Group"
+              >
+                <option value="">Ungrouped</option>
+                <option v-for="g in groups" :key="g.id" :value="g.id">
+                  {{ g.name }}
+                </option>
+              </select>
+              <label class="text-sm text-slate-500">Check every</label>
+              <select
+                v-model.number="resForm.intervalMinutes"
+                :class="inputCls + ' w-auto'"
+              >
+                <option v-for="m in intervals" :key="m" :value="m">
+                  {{ m }} minutes
+                </option>
+              </select>
+              <button
+                type="submit"
+                class="ml-auto rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+              >
+                Add service
+              </button>
+            </div>
+          </form>
+
+          <div
+            v-if="!resources.length"
+            class="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-400 dark:border-slate-700"
+          >
+            No services yet.
+          </div>
+
+          <ul v-else class="space-y-3">
+            <li
+              v-for="r in resources"
+              :key="r.id"
+              class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div class="grid gap-3 sm:grid-cols-2">
+                <input v-model="r.name" :class="inputCls" />
+                <input v-model="r.endpoint" :class="inputCls" />
+              </div>
+              <div class="mt-3 flex flex-wrap items-center gap-3">
+                <select v-model="r.group_id" :class="inputCls + ' w-auto'" title="Group">
+                  <option :value="null">Ungrouped</option>
+                  <option v-for="g in groups" :key="g.id" :value="g.id">
+                    {{ g.name }}
+                  </option>
+                </select>
+                <select v-model.number="r.interval_minutes" :class="inputCls + ' w-auto'">
+                  <option v-for="m in intervals" :key="m" :value="m">
+                    {{ m }} minutes
+                  </option>
+                </select>
+                <label class="flex items-center gap-2 text-sm text-slate-500">
+                  <input
+                    type="checkbox"
+                    :checked="r.enabled === 1"
+                    @change="r.enabled = $event.target.checked ? 1 : 0"
+                    class="h-4 w-4 rounded"
+                  />
+                  Enabled
+                </label>
+                <div class="ml-auto flex gap-2">
+                  <button
+                    @click="checkResource(r)"
+                    class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    Check now
+                  </button>
+                  <button
+                    @click="saveResource(r)"
+                    class="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                  >
+                    Save
+                  </button>
+                  <button
+                    @click="deleteResource(r)"
+                    class="rounded-lg px-3 py-1.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ===== Groups ===== -->
+        <section v-show="tab === 'groups'" class="mt-6 space-y-6">
+          <form
+            @submit.prevent="addGroup"
+            class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+          >
+            <h2 class="text-base font-semibold">Add a group</h2>
+            <p class="mt-1 text-sm text-slate-400">
+              Categories like Gateway, Services, Workers, Infra.
+            </p>
+            <div class="mt-4 flex items-center gap-3">
+              <input
+                v-model="groupForm.name"
+                placeholder="Group name"
+                required
+                :class="inputCls"
+              />
+              <button
+                type="submit"
+                class="shrink-0 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+              >
+                Add group
+              </button>
+            </div>
+          </form>
+
+          <div
+            v-if="!groups.length"
+            class="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-400 dark:border-slate-700"
+          >
+            No groups yet.
+          </div>
+
+          <ul v-else class="space-y-3">
+            <li
+              v-for="(g, i) in groups"
+              :key="g.id"
+              class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div class="flex flex-col">
+                <button
+                  @click="moveGroup(i, -1)"
+                  :disabled="i === 0"
+                  class="text-slate-400 transition hover:text-slate-700 disabled:opacity-30 dark:hover:text-slate-200"
+                  title="Move up"
+                >
+                  ▲
+                </button>
+                <button
+                  @click="moveGroup(i, 1)"
+                  :disabled="i === groups.length - 1"
+                  class="text-slate-400 transition hover:text-slate-700 disabled:opacity-30 dark:hover:text-slate-200"
+                  title="Move down"
+                >
+                  ▼
+                </button>
+              </div>
+              <input v-model="g.name" :class="inputCls" />
+              <span class="hidden shrink-0 text-xs text-slate-400 sm:inline"
+                >/{{ g.slug }}</span
+              >
+              <div class="ml-auto flex shrink-0 gap-2">
+                <button
+                  @click="renameGroup(g)"
+                  class="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                >
+                  Save
+                </button>
+                <button
+                  @click="deleteGroup(g)"
+                  class="rounded-lg px-3 py-1.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ===== News ===== -->
+        <section v-show="tab === 'news'" class="mt-6 space-y-6">
+          <form
+            @submit.prevent="addNews"
+            class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+          >
+            <h2 class="text-base font-semibold">Post an announcement</h2>
+            <div class="mt-4 space-y-3">
+              <input
+                v-model="newsForm.title"
+                placeholder="Title"
+                required
+                :class="inputCls"
+              />
+              <textarea
+                v-model="newsForm.body"
+                placeholder="Details (optional)"
+                rows="3"
+                :class="inputCls"
+              ></textarea>
+              <div class="flex items-center gap-3">
+                <select v-model="newsForm.level" :class="inputCls + ' w-auto'">
+                  <option value="info">Info</option>
+                  <option value="warning">Warning</option>
+                  <option value="critical">Critical</option>
+                </select>
+                <button
+                  type="submit"
+                  class="ml-auto rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                >
+                  Publish
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div
+            v-if="!news.length"
+            class="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-400 dark:border-slate-700"
+          >
+            No announcements.
+          </div>
+
+          <ul v-else class="space-y-3">
+            <li
+              v-for="n in news"
+              :key="n.id"
+              class="flex items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase"
+                    :class="newsBadge(n.level)"
+                    >{{ n.level }}</span
+                  >
+                  <span v-if="!n.active" class="text-xs text-slate-400">(hidden)</span>
+                </div>
+                <p class="mt-1 font-medium">{{ n.title }}</p>
+                <p
+                  v-if="n.body"
+                  class="mt-0.5 text-sm text-slate-500 dark:text-slate-400 whitespace-pre-line"
+                >
+                  {{ n.body }}
+                </p>
+              </div>
+              <div class="flex shrink-0 gap-2">
+                <button
+                  @click="toggleNews(n)"
+                  class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  {{ n.active ? 'Hide' : 'Show' }}
+                </button>
+                <button
+                  @click="deleteNews(n)"
+                  class="rounded-lg px-3 py-1.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                >
+                  Delete
+                </button>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ===== Account ===== -->
+        <section v-show="tab === 'account'" class="mt-6">
+          <form
+            @submit.prevent="saveAccount"
+            class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+          >
+            <h2 class="text-base font-semibold">Admin credentials</h2>
+            <p class="mt-1 text-sm text-slate-400">
+              After saving you'll be asked to sign in again with the new credentials.
+            </p>
+            <div class="mt-4 space-y-3">
+              <div>
+                <label class="text-sm text-slate-500">Username</label>
+                <input v-model="account.username" :class="inputCls + ' mt-1'" required />
+              </div>
+              <div>
+                <label class="text-sm text-slate-500">New password (min 6 chars)</label>
+                <input
+                  v-model="account.password"
+                  type="password"
+                  :class="inputCls + ' mt-1'"
+                  required
+                  minlength="6"
+                />
+              </div>
+              <button
+                type="submit"
+                class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+              >
+                Update credentials
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <script src="/admin.js"></script>
+  </body>
+</html>
