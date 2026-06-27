@@ -14,6 +14,8 @@ createApp({
     const ungrouped = computed(() =>
       data.value ? (data.value.groups.find((g) => g.id === null) ?? null) : null,
     );
+    // There is only ever a single ungrouped service — render it as one full box.
+    const ungroupedItem = computed(() => ungrouped.value?.resources[0] ?? null);
     // Every other (named) group keeps its title + aggregate bullet, rendered compact.
     const namedGroups = computed(() =>
       data.value ? data.value.groups.filter((g) => g.id !== null) : [],
@@ -179,6 +181,7 @@ createApp({
       loading,
       isDark,
       ungrouped,
+      ungroupedItem,
       namedGroups,
       overall,
       overallLabel,

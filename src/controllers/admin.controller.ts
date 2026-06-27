@@ -112,6 +112,17 @@ export const AdminController = {
     res.json(updated);
   },
 
+  /** POST /admin/api/resources/reorder — body: { ids: number[] }. */
+  reorderResources(req: Request, res: Response): void {
+    const ids = req.body?.ids;
+    if (!Array.isArray(ids) || !ids.every((id) => Number.isInteger(id))) {
+      res.status(400).json({ error: 'ids must be an array of integers' });
+      return;
+    }
+    ResourceModel.reorder(ids);
+    res.json({ ok: true });
+  },
+
   /** DELETE /admin/api/resources/:id */
   deleteResource(req: Request, res: Response): void {
     const ok = ResourceModel.remove(Number(req.params.id));

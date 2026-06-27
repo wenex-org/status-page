@@ -29,6 +29,7 @@ adminRouter.delete('/api/groups/:id', GroupController.remove);
 // Resources
 adminRouter.get('/api/resources', AdminController.listResources);
 adminRouter.post('/api/resources', AdminController.createResource);
+adminRouter.post('/api/resources/reorder', AdminController.reorderResources);
 adminRouter.put('/api/resources/:id', AdminController.updateResource);
 adminRouter.delete('/api/resources/:id', AdminController.deleteResource);
 adminRouter.post('/api/resources/:id/check', (req, res, next) => {

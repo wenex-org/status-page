@@ -2,15 +2,26 @@ import { config } from '../config.js';
 import type { Resource } from '../models/types.js';
 import { StatusHistoryModel, type CheckResult } from '../models/status-history.model.js';
 
+/** True when the endpoint path ends with `/status` (the health-check convention). */
+function isStatusEndpoint(endpoint: string): boolean {
+  try {
+    const path = new URL(endpoint).pathname.replace(/\/+$/, '').toLowerCase();
+    return path.endsWith('/status');
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Performs a single health check against a resource's endpoint.
  *
- * Endpoints return the NestJS Terminus / wenex gateway format:
+ * When the endpoint path ends with `/status` it is treated as a structured
+ * health check returning the NestJS Terminus / wenex gateway format:
  *   { "status": "ok" | "error", "info": {...}, "error": {...}, "details": {...} }
+ * and is UP only when the request is 2xx AND the body's `status` is "ok"/"up".
  *
- * A resource is considered UP when the HTTP request succeeds with a 2xx status
- * and the body's top-level `status` is "ok" (or "up"). If the body isn't the
- * expected shape we fall back to treating any 2xx response as up.
+ * For any other endpoint we don't inspect the body — a 2xx HTTP status alone
+ * means operational.
  */
 export async function checkResource(resource: Resource): Promise<CheckResult> {
   const started = Date.now();
@@ -28,15 +39,19 @@ export async function checkResource(resource: Resource): Promise<CheckResult> {
     let isUp = res.ok;
     let detail: string | null = `HTTP ${res.status}`;
 
-    try {
-      const body = (await res.json()) as { status?: string };
-      if (body && typeof body.status === 'string') {
-        const s = body.status.toLowerCase();
-        isUp = res.ok && (s === 'ok' || s === 'up');
-        detail = `status=${body.status}`;
+    // Only `/status` endpoints have their JSON body inspected; everything else
+    // is judged purely by the HTTP status code (2xx = operational).
+    if (isStatusEndpoint(resource.endpoint)) {
+      try {
+        const body = (await res.json()) as { status?: string };
+        if (body && typeof body.status === 'string') {
+          const s = body.status.toLowerCase();
+          isUp = res.ok && (s === 'ok' || s === 'up');
+          detail = `status=${body.status}`;
+        }
+      } catch {
+        // Non-JSON body: rely on the HTTP status code already captured.
       }
-    } catch {
-      // Non-JSON body: rely on the HTTP status code already captured.
     }
 
     return {

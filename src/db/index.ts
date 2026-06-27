@@ -44,6 +44,18 @@ function runMigrations(db: Database.Database): void {
     );
     db.exec('CREATE INDEX IF NOT EXISTS idx_resources_group ON resources (group_id)');
   }
+
+  if (!hasColumn(db, 'resources', 'position')) {
+    db.exec('ALTER TABLE resources ADD COLUMN position INTEGER NOT NULL DEFAULT 0');
+    // Backfill a stable initial order (by name) so existing rows are deterministic.
+    const rows = db
+      .prepare('SELECT id FROM resources ORDER BY name COLLATE NOCASE')
+      .all() as { id: number }[];
+    const upd = db.prepare('UPDATE resources SET position = ? WHERE id = ?');
+    db.transaction((rs: { id: number }[]) =>
+      rs.forEach((r, i) => upd.run(i, r.id)),
+    )(rows);
+  }
 }
 
 function hasColumn(db: Database.Database, table: string, column: string): boolean {

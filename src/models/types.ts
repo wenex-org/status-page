@@ -19,6 +19,7 @@ export interface Resource {
   interval_minutes: number;
   enabled: number; // 0 | 1
   group_id: number | null;
+  position: number;
   created_at: string;
 }
 

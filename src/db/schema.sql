@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS resources (
   interval_minutes INTEGER NOT NULL DEFAULT 5,
   enabled          INTEGER NOT NULL DEFAULT 1,
   group_id         INTEGER REFERENCES groups(id) ON DELETE SET NULL,
+  position         INTEGER NOT NULL DEFAULT 0,
   created_at       TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 

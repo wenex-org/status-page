@@ -137,60 +137,101 @@
             No services yet.
           </div>
 
-          <ul v-else class="space-y-3">
-            <li
-              v-for="r in resources"
-              :key="r.id"
-              class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+          <div v-else class="space-y-6">
+            <div
+              v-for="section in resourceSections"
+              :key="section.id === null ? 'ungrouped' : section.id"
             >
-              <div class="grid gap-3 sm:grid-cols-2">
-                <input v-model="r.name" :class="inputCls" />
-                <input v-model="r.endpoint" :class="inputCls" />
-              </div>
-              <div class="mt-3 flex flex-wrap items-center gap-3">
-                <select v-model="r.group_id" :class="inputCls + ' w-auto'" title="Group">
-                  <option :value="null">Ungrouped</option>
-                  <option v-for="g in groups" :key="g.id" :value="g.id">
-                    {{ g.name }}
-                  </option>
-                </select>
-                <select v-model.number="r.interval_minutes" :class="inputCls + ' w-auto'">
-                  <option v-for="m in intervals" :key="m" :value="m">
-                    {{ m }} minutes
-                  </option>
-                </select>
-                <label class="flex items-center gap-2 text-sm text-slate-500">
-                  <input
-                    type="checkbox"
-                    :checked="r.enabled === 1"
-                    @change="r.enabled = $event.target.checked ? 1 : 0"
-                    class="h-4 w-4 rounded"
-                  />
-                  Enabled
-                </label>
-                <div class="ml-auto flex gap-2">
-                  <button
-                    @click="checkResource(r)"
-                    class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                  >
-                    Check now
-                  </button>
-                  <button
-                    @click="saveResource(r)"
-                    class="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
-                  >
-                    Save
-                  </button>
-                  <button
-                    @click="deleteResource(r)"
-                    class="rounded-lg px-3 py-1.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </li>
-          </ul>
+              <h3
+                class="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+              >
+                {{ section.name }}
+              </h3>
+              <ul class="space-y-3">
+                <li
+                  v-for="(r, i) in section.items"
+                  :key="r.id"
+                  class="flex gap-3 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+                >
+                  <!-- Reorder arrows (order within this section). -->
+                  <div class="flex flex-col justify-center">
+                    <button
+                      @click="moveResource(section.items, i, -1)"
+                      :disabled="i === 0"
+                      class="text-slate-400 transition hover:text-slate-700 disabled:opacity-30 dark:hover:text-slate-200"
+                      title="Move up"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      @click="moveResource(section.items, i, 1)"
+                      :disabled="i === section.items.length - 1"
+                      class="text-slate-400 transition hover:text-slate-700 disabled:opacity-30 dark:hover:text-slate-200"
+                      title="Move down"
+                    >
+                      ▼
+                    </button>
+                  </div>
+
+                  <div class="min-w-0 flex-1">
+                    <div class="grid gap-3 sm:grid-cols-2">
+                      <input v-model="r.name" :class="inputCls" />
+                      <input v-model="r.endpoint" :class="inputCls" />
+                    </div>
+                    <div class="mt-3 flex flex-wrap items-center gap-3">
+                      <select
+                        v-model="r.group_id"
+                        :class="inputCls + ' w-auto'"
+                        title="Group"
+                      >
+                        <option :value="null">Ungrouped</option>
+                        <option v-for="g in groups" :key="g.id" :value="g.id">
+                          {{ g.name }}
+                        </option>
+                      </select>
+                      <select
+                        v-model.number="r.interval_minutes"
+                        :class="inputCls + ' w-auto'"
+                      >
+                        <option v-for="m in intervals" :key="m" :value="m">
+                          {{ m }} minutes
+                        </option>
+                      </select>
+                      <label class="flex items-center gap-2 text-sm text-slate-500">
+                        <input
+                          type="checkbox"
+                          :checked="r.enabled === 1"
+                          @change="r.enabled = $event.target.checked ? 1 : 0"
+                          class="h-4 w-4 rounded"
+                        />
+                        Enabled
+                      </label>
+                      <div class="ml-auto flex gap-2">
+                        <button
+                          @click="checkResource(r)"
+                          class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        >
+                          Check now
+                        </button>
+                        <button
+                          @click="saveResource(r)"
+                          class="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+                        >
+                          Save
+                        </button>
+                        <button
+                          @click="deleteResource(r)"
+                          class="rounded-lg px-3 py-1.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
         </section>
 
         <!-- ===== Groups ===== -->

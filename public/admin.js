@@ -1,6 +1,6 @@
 /* Admin panel — Vue 3 (global build). Auth is handled by the browser's
    Basic Auth credentials, sent automatically on same-origin requests. */
-const { createApp, ref, reactive, onMounted } = Vue;
+const { createApp, ref, reactive, computed, onMounted } = Vue;
 
 createApp({
   setup() {
@@ -71,6 +71,45 @@ createApp({
     function groupName(id) {
       const g = groups.value.find((x) => x.id === id);
       return g ? g.name : 'Ungrouped';
+    }
+
+    // Resources split into ordered sections (Ungrouped first, then each group),
+    // so reordering happens within a section while sharing one global position.
+    const resourceSections = computed(() => {
+      const sections = [
+        {
+          id: null,
+          name: 'Ungrouped',
+          items: resources.value.filter((r) => r.group_id === null),
+        },
+      ];
+      for (const g of groups.value) {
+        sections.push({
+          id: g.id,
+          name: g.name,
+          items: resources.value.filter((r) => r.group_id === g.id),
+        });
+      }
+      return sections.filter((s) => s.items.length > 0);
+    });
+
+    // Move a resource up/down within its section and persist the new ordering.
+    async function moveResource(items, index, delta) {
+      const next = index + delta;
+      if (next < 0 || next >= items.length) return;
+      const a = items[index].id;
+      const b = items[next].id;
+      const arr = [...resources.value];
+      const ia = arr.findIndex((r) => r.id === a);
+      const ib = arr.findIndex((r) => r.id === b);
+      [arr[ia], arr[ib]] = [arr[ib], arr[ia]];
+      resources.value = arr;
+      try {
+        await api('POST', '/admin/api/resources/reorder', { ids: arr.map((r) => r.id) });
+      } catch (e) {
+        notify(e.message, false);
+        await loadResources();
+      }
     }
 
     async function addResource() {
@@ -243,6 +282,8 @@ createApp({
       inputCls,
       newsBadge,
       groupName,
+      resourceSections,
+      moveResource,
       addResource,
       saveResource,
       deleteResource,

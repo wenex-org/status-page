@@ -36,10 +36,12 @@
       <div class="mx-auto max-w-3xl px-4 py-10 sm:py-16">
         <!-- Header -->
         <header class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img src="/logo.svg" alt="Wenex" class="h-10 w-10" width="40" height="40" />
-            <h1 class="text-2xl font-semibold tracking-tight">Wenex Status</h1>
-          </div>
+          <a href="https://wenex.org">
+            <div class="flex items-center gap-3">
+              <img src="/logo.svg" alt="Wenex" class="h-10 w-10" width="40" height="40" />
+              <h1 class="text-2xl font-semibold tracking-tight">Wenex Status</h1>
+            </div>
+          </a>
           <button
             @click="toggleTheme"
             class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -121,12 +123,12 @@
           </div>
 
           <div v-else class="space-y-8">
-            <!-- Ungrouped resources: shown first, no category title or aggregate bullet. -->
-            <ul v-if="ungrouped" class="space-y-3">
+            <!-- Multiple ungrouped services: stacked medium cards, no title or bullet. -->
+            <ul v-if="ungrouped && ungrouped.resources.length > 1" class="space-y-3">
               <li
                 v-for="r in ungrouped.resources"
                 :key="r.id"
-                class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900"
+                class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition dark:border-slate-800 dark:bg-slate-900"
               >
                 <div class="flex items-center justify-between gap-4">
                   <div class="flex min-w-0 items-center gap-3">
@@ -149,9 +151,9 @@
                   </div>
                 </div>
 
-                <!-- Uptime bar -->
+                <!-- Slim uptime bar -->
                 <div
-                  class="mt-4 flex h-7 items-end gap-[3px]"
+                  class="mt-3 flex h-5 items-end gap-[2px]"
                   :title="'Most recent ' + r.history.length + ' checks'"
                 >
                   <template v-if="r.history.length">
@@ -169,18 +171,74 @@
                     ></span>
                   </template>
                 </div>
-
-                <div
-                  class="mt-2 flex items-center justify-between text-xs text-slate-400"
-                >
-                  <span v-if="r.lastCheckedAt"
-                    >Last checked {{ relativeTime(r.lastCheckedAt) }}</span
-                  >
-                  <span v-else>Awaiting first check</span>
-                  <span v-if="r.responseTimeMs !== null">{{ r.responseTimeMs }} ms</span>
-                </div>
               </li>
             </ul>
+
+            <!-- Single ungrouped service: one full-width box, no category title or bullet. -->
+            <div
+              v-else-if="ungroupedItem"
+              class="w-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <div class="flex min-w-0 items-center gap-3">
+                  <span
+                    class="h-2.5 w-2.5 shrink-0 rounded-full"
+                    :class="dotClass(ungroupedItem.current)"
+                  ></span>
+                  <div class="min-w-0">
+                    <p class="truncate font-medium">{{ ungroupedItem.name }}</p>
+                    <p class="truncate text-xs text-slate-400">
+                      {{ checkCadence(ungroupedItem) }}
+                    </p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p
+                    class="text-sm font-semibold"
+                    :class="textClass(ungroupedItem.current)"
+                  >
+                    {{ stateLabel(ungroupedItem.current) }}
+                  </p>
+                  <p
+                    class="text-xs text-slate-400"
+                    v-if="ungroupedItem.uptime24h !== null"
+                  >
+                    {{ ungroupedItem.uptime24h }}% · 24h
+                  </p>
+                </div>
+              </div>
+
+              <!-- Uptime bar -->
+              <div
+                class="mt-4 flex h-7 items-end gap-[3px]"
+                :title="'Most recent ' + ungroupedItem.history.length + ' checks'"
+              >
+                <template v-if="ungroupedItem.history.length">
+                  <span
+                    v-for="(h, i) in ungroupedItem.history"
+                    :key="i"
+                    class="h-full flex-1 rounded-sm"
+                    :class="h.isUp ? 'bg-emerald-400/80 dark:bg-emerald-500/70' : 'bg-rose-400/90 dark:bg-rose-500/80'"
+                    :title="(h.isUp ? 'Up' : 'Down') + ' · ' + formatDate(h.checkedAt)"
+                  ></span>
+                </template>
+                <template v-else>
+                  <span
+                    class="h-full flex-1 rounded-sm bg-slate-200 dark:bg-slate-800"
+                  ></span>
+                </template>
+              </div>
+
+              <div class="mt-2 flex items-center justify-between text-xs text-slate-400">
+                <span v-if="ungroupedItem.lastCheckedAt"
+                  >Last checked {{ relativeTime(ungroupedItem.lastCheckedAt) }}</span
+                >
+                <span v-else>Awaiting first check</span>
+                <span v-if="ungroupedItem.responseTimeMs !== null"
+                  >{{ ungroupedItem.responseTimeMs }} ms</span
+                >
+              </div>
+            </div>
 
             <!-- Named groups: category header + compact, dense rows. -->
             <div v-for="g in namedGroups" :key="g.slug">
@@ -212,9 +270,7 @@
                       class="h-2 w-2 shrink-0 rounded-full"
                       :class="dotClass(r.current)"
                     ></span>
-                    <span
-                      class="truncate text-sm font-medium"
-                      :title="r.name"
+                    <span class="truncate text-sm font-medium" :title="r.name"
                       >{{ r.name }}</span
                     >
                   </div>

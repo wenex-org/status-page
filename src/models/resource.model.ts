@@ -5,13 +5,15 @@ import { getDb } from '../db/index.js';
 export const ResourceModel = {
   all(): Resource[] {
     return getDb()
-      .prepare('SELECT * FROM resources ORDER BY name COLLATE NOCASE')
+      .prepare('SELECT * FROM resources ORDER BY position, name COLLATE NOCASE')
       .all() as Resource[];
   },
 
   enabled(): Resource[] {
     return getDb()
-      .prepare('SELECT * FROM resources WHERE enabled = 1 ORDER BY name COLLATE NOCASE')
+      .prepare(
+        'SELECT * FROM resources WHERE enabled = 1 ORDER BY position, name COLLATE NOCASE',
+      )
       .all() as Resource[];
   },
 
@@ -26,11 +28,24 @@ export const ResourceModel = {
     intervalMinutes: number;
     groupId?: number | null;
   }): Resource {
-    const info = getDb()
+    const db = getDb();
+    const nextPos =
+      (
+        db.prepare('SELECT COALESCE(MAX(position), -1) AS p FROM resources').get() as {
+          p: number;
+        }
+      ).p + 1;
+    const info = db
       .prepare(
-        'INSERT INTO resources (name, endpoint, interval_minutes, group_id) VALUES (?, ?, ?, ?)',
+        'INSERT INTO resources (name, endpoint, interval_minutes, group_id, position) VALUES (?, ?, ?, ?, ?)',
       )
-      .run(input.name, input.endpoint, input.intervalMinutes, input.groupId ?? null);
+      .run(
+        input.name,
+        input.endpoint,
+        input.intervalMinutes,
+        input.groupId ?? null,
+        nextPos,
+      );
     return this.find(Number(info.lastInsertRowid))!;
   },
 
@@ -73,5 +88,15 @@ export const ResourceModel = {
 
   remove(id: number): boolean {
     return getDb().prepare('DELETE FROM resources WHERE id = ?').run(id).changes > 0;
+  },
+
+  /** Persist an explicit ordering. Ids absent from `orderedIds` are untouched. */
+  reorder(orderedIds: number[]): void {
+    const db = getDb();
+    const stmt = db.prepare('UPDATE resources SET position = ? WHERE id = ?');
+    const tx = db.transaction((ids: number[]) => {
+      ids.forEach((id, index) => stmt.run(index, id));
+    });
+    tx(orderedIds);
   },
 };
