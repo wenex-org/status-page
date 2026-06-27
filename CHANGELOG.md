@@ -7,12 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Show ungrouped services at the top with no group title; grouped ones render compact. @vhidvz
-- Render a single ungrouped service as a full box, multiple as stacked medium cards. @vhidvz
-- Reorder services (ungrouped included) from the admin via up/down arrows. @vhidvz
-- Judge non-/status endpoints operational by 2xx HTTP code only, skipping the body. @vhidvz
-- Point the header link at a `?back=` query URL when present, else the Wenex site. @vhidvz
-
 ## [1.0.0] - 2026-06-27
 
 ### Added

@@ -13,7 +13,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "git": "bash ./scripts/git-submodule.sh",
+    "git:remote:add": "bash ./scripts/git-remote-add.sh"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
