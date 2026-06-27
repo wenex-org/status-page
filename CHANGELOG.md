@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-27
+
 ### Added
 
 - show project version (APP_VERSION env, else package.json) in status page footer. @vhidvz
@@ -21,5 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - initial release 🎉​🎊​. @vhidvz
 
-[unreleased]: https://github.com/wenex-org/status-page/compare/1.0.0...HEAD
+[unreleased]: https://github.com/wenex-org/status-page/compare/1.0.1...HEAD
+[1.0.1]: https://github.com/wenex-org/status-page/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/wenex-org/status-page/releases/tag/1.0.0
