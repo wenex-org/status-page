@@ -1,7 +1,8 @@
 node_modules/
-.impeccable/
 dist/
 data/
 *.log
 .env
 .DS_Store
+*.cache.json
+.impeccable/hook.cache.json

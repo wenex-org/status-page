@@ -10,6 +10,15 @@ createApp({
 
     const overall = computed(() => (data.value ? data.value.overall : 'unknown'));
 
+    // Ungrouped resources (group id === null) are shown first, header-less.
+    const ungrouped = computed(() =>
+      data.value ? (data.value.groups.find((g) => g.id === null) ?? null) : null,
+    );
+    // Every other (named) group keeps its title + aggregate bullet, rendered compact.
+    const namedGroups = computed(() =>
+      data.value ? data.value.groups.filter((g) => g.id !== null) : [],
+    );
+
     const overallLabel = computed(
       () =>
         ({
@@ -169,6 +178,8 @@ createApp({
       data,
       loading,
       isDark,
+      ungrouped,
+      namedGroups,
       overall,
       overallLabel,
       overallClasses,

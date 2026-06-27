@@ -121,8 +121,70 @@
           </div>
 
           <div v-else class="space-y-8">
-            <div v-for="g in data.groups" :key="g.slug">
-              <div class="mb-3 flex items-center justify-between px-1">
+            <!-- Ungrouped resources: shown first, no category title or aggregate bullet. -->
+            <ul v-if="ungrouped" class="space-y-3">
+              <li
+                v-for="r in ungrouped.resources"
+                :key="r.id"
+                class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900"
+              >
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <span
+                      class="h-2.5 w-2.5 shrink-0 rounded-full"
+                      :class="dotClass(r.current)"
+                    ></span>
+                    <div class="min-w-0">
+                      <p class="truncate font-medium">{{ r.name }}</p>
+                      <p class="truncate text-xs text-slate-400">{{ checkCadence(r) }}</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-semibold" :class="textClass(r.current)">
+                      {{ stateLabel(r.current) }}
+                    </p>
+                    <p class="text-xs text-slate-400" v-if="r.uptime24h !== null">
+                      {{ r.uptime24h }}% · 24h
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Uptime bar -->
+                <div
+                  class="mt-4 flex h-7 items-end gap-[3px]"
+                  :title="'Most recent ' + r.history.length + ' checks'"
+                >
+                  <template v-if="r.history.length">
+                    <span
+                      v-for="(h, i) in r.history"
+                      :key="i"
+                      class="h-full flex-1 rounded-sm"
+                      :class="h.isUp ? 'bg-emerald-400/80 dark:bg-emerald-500/70' : 'bg-rose-400/90 dark:bg-rose-500/80'"
+                      :title="(h.isUp ? 'Up' : 'Down') + ' · ' + formatDate(h.checkedAt)"
+                    ></span>
+                  </template>
+                  <template v-else>
+                    <span
+                      class="h-full flex-1 rounded-sm bg-slate-200 dark:bg-slate-800"
+                    ></span>
+                  </template>
+                </div>
+
+                <div
+                  class="mt-2 flex items-center justify-between text-xs text-slate-400"
+                >
+                  <span v-if="r.lastCheckedAt"
+                    >Last checked {{ relativeTime(r.lastCheckedAt) }}</span
+                  >
+                  <span v-else>Awaiting first check</span>
+                  <span v-if="r.responseTimeMs !== null">{{ r.responseTimeMs }} ms</span>
+                </div>
+              </li>
+            </ul>
+
+            <!-- Named groups: category header + compact, dense rows. -->
+            <div v-for="g in namedGroups" :key="g.slug">
+              <div class="mb-2 flex items-center justify-between px-1">
                 <h2
                   class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
                 >
@@ -137,63 +199,48 @@
                 </span>
               </div>
 
-              <ul class="space-y-3">
+              <ul
+                class="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-900"
+              >
                 <li
                   v-for="r in g.resources"
                   :key="r.id"
-                  class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition dark:border-slate-800 dark:bg-slate-900"
+                  class="flex items-center justify-between gap-3 px-4 py-2.5"
                 >
-                  <div class="flex items-center justify-between gap-4">
-                    <div class="flex min-w-0 items-center gap-3">
-                      <span
-                        class="h-2.5 w-2.5 shrink-0 rounded-full"
-                        :class="dotClass(r.current)"
-                      ></span>
-                      <div class="min-w-0">
-                        <p class="truncate font-medium">{{ r.name }}</p>
-                        <p class="truncate text-xs text-slate-400">{{ checkCadence(r) }}</p>
-                      </div>
-                    </div>
-                    <div class="text-right">
-                      <p class="text-sm font-semibold" :class="textClass(r.current)">
-                        {{ stateLabel(r.current) }}
-                      </p>
-                      <p class="text-xs text-slate-400" v-if="r.uptime24h !== null">
-                        {{ r.uptime24h }}% · 24h
-                      </p>
-                    </div>
-                  </div>
-
-                  <!-- Uptime bar -->
-                  <div
-                    class="mt-4 flex h-7 items-end gap-[3px]"
-                    :title="'Most recent ' + r.history.length + ' checks'"
-                  >
-                    <template v-if="r.history.length">
-                      <span
-                        v-for="(h, i) in r.history"
-                        :key="i"
-                        class="h-full flex-1 rounded-sm"
-                        :class="h.isUp ? 'bg-emerald-400/80 dark:bg-emerald-500/70' : 'bg-rose-400/90 dark:bg-rose-500/80'"
-                        :title="(h.isUp ? 'Up' : 'Down') + ' · ' + formatDate(h.checkedAt)"
-                      ></span>
-                    </template>
-                    <template v-else>
-                      <span
-                        class="h-full flex-1 rounded-sm bg-slate-200 dark:bg-slate-800"
-                      ></span>
-                    </template>
-                  </div>
-
-                  <div
-                    class="mt-2 flex items-center justify-between text-xs text-slate-400"
-                  >
-                    <span v-if="r.lastCheckedAt"
-                      >Last checked {{ relativeTime(r.lastCheckedAt) }}</span
+                  <div class="flex min-w-0 items-center gap-2.5">
+                    <span
+                      class="h-2 w-2 shrink-0 rounded-full"
+                      :class="dotClass(r.current)"
+                    ></span>
+                    <span
+                      class="truncate text-sm font-medium"
+                      :title="r.name"
+                      >{{ r.name }}</span
                     >
-                    <span v-else>Awaiting first check</span>
-                    <span v-if="r.responseTimeMs !== null"
-                      >{{ r.responseTimeMs }} ms</span
+                  </div>
+                  <div class="flex shrink-0 items-center gap-3">
+                    <!-- Compact uptime sparkline (hidden on the smallest screens). -->
+                    <div
+                      v-if="r.history.length"
+                      class="hidden h-4 items-end gap-px sm:flex"
+                      :title="'Most recent ' + r.history.length + ' checks'"
+                    >
+                      <span
+                        v-for="(h, i) in r.history.slice(-24)"
+                        :key="i"
+                        class="h-full w-1 rounded-[1px]"
+                        :class="h.isUp ? 'bg-emerald-400/80 dark:bg-emerald-500/70' : 'bg-rose-400/90 dark:bg-rose-500/80'"
+                      ></span>
+                    </div>
+                    <span
+                      v-if="r.uptime24h !== null"
+                      class="hidden text-xs tabular-nums text-slate-400 sm:inline"
+                      >{{ r.uptime24h }}%</span
+                    >
+                    <span
+                      class="w-20 text-right text-xs font-semibold"
+                      :class="textClass(r.current)"
+                      >{{ stateLabel(r.current) }}</span
                     >
                   </div>
                 </li>

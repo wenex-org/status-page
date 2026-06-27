@@ -1,9 +1,10 @@
-./.impeccable
-
 .env
 
 ./dist
 ./vscode
 ./node_modules
+
+*.cache.json
+.impeccable/hook.cache.json
 
 data
